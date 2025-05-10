@@ -7,7 +7,7 @@ import undetected_chromedriver as uc
 import time, re
 import unittest
 
-    #test case 2 --> valid/invalid google login
+    #test case 2 --> valid/invalid google login         mail send --> 2FA REQUIRED, GOOGLE TESTS WILL FAIL
 
 class LoginTest(unittest.TestCase):
     @classmethod
