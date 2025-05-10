@@ -10,6 +10,9 @@
     <div class="text-center p-5 bg-white shadow rounded">
         <h1 class="mb-3">Hello, {{ user }}! 👋</h1>
         <p class="lead">Welcome to your dashboard.</p>
+        <a href="{{ url_for('survey') }}" class="btn btn-primary mt-3">
+        Go to Survey
+        </a>
         <a href="/logout" class="btn btn-danger mt-3">Logout</a>
     </div>
 </body>

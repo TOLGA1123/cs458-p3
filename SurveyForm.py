@@ -34,7 +34,7 @@ class SurveyForm(FlaskForm):
             ('Claude', 'Claude'),
             ('Copilot', 'Copilot')
         ],
-        validators=[DataRequired()]
+        #validators=[DataRequired()]        remove here
     )
     chatgpt_cons = TextAreaField('ChatGPT Cons')
     bard_cons = TextAreaField('Bard Cons')

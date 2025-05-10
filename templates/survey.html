@@ -69,28 +69,41 @@
         {{ form.use_case(class="input") }}
       </div>
 
-      <button type="submit" class="btn-submit">Submit</button>
+      <button type="submit" id="send-btn" class="btn-submit">Submit</button>
     </form>
   </div>
 
   <script>
-    // Prevent any accidental GET and handle AJAX if desired
     document.getElementById('survey-form').addEventListener('submit', function (e) {
-      // Comment this out if you want a normal POST redirect
-      e.preventDefault();
+  // Prevent the form from submitting normally
+  e.preventDefault();
 
-      // Gather all form data
-      let formData = new FormData(this);
-      let json = {};
-      formData.forEach((v, k) => {
-        if (json[k]) {
-          // handle multiple models
-          if (!Array.isArray(json[k])) json[k] = [json[k]];
-          json[k].push(v);
-        } else {
-          json[k] = v;
-        }
-      });
+  // Check if at least one model checkbox is selected
+  let modelChecked = false;
+  document.querySelectorAll('input[type=checkbox]').forEach(cb => {
+    if (cb.checked) {
+      modelChecked = true;
+    }
+  });
+
+  if (!modelChecked) {
+    // Show an alert or flash message if no model is selected
+    alert("Please select at least one model.");
+    return; // Prevent form submission
+  }
+
+  // Gather all form data
+  let formData = new FormData(this);
+  let json = {};
+  formData.forEach((v, k) => {
+    if (json[k]) {
+      // handle multiple models
+      if (!Array.isArray(json[k])) json[k] = [json[k]];
+      json[k].push(v);
+    } else {
+      json[k] = v;
+    }
+  });
 
       fetch('/survey/send', {
         method: 'POST',
