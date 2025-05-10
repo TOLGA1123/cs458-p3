@@ -1,0 +1,113 @@
+.survey-page {
+  display: flex;
+  justify-content: center;
+  padding: 40px 20px;
+  background: #f4f7fc;
+  min-height: 100vh;
+}
+
+.survey-container {
+  background: #fff;
+  max-width: 700px;
+  width: 100%;
+  padding: 30px 40px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+
+.survey-container h1 {
+  text-align: center;
+  color: #007bff;
+  margin-bottom: 24px;
+  font-size: 28px;
+}
+
+.flash-messages { margin-bottom: 20px; }
+.flash.success { background: #e0f7ea; color: #2e7d32; padding: 10px; border-radius: 5px; }
+.flash.error   { background: #fdecea; color: #c62828; padding: 10px; border-radius: 5px; }
+
+form { display: grid; grid-template-columns: 1fr 2fr; gap: 12px 20px; align-items: center; }
+
+form label {
+  font-weight: 500;
+  color: #555;
+  text-align: right;
+}
+
+form .input, form select, form textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #f9f9f9;
+  font-size: 14px;
+  transition: border 0.3s ease;
+}
+
+form .input:focus, form select:focus, form textarea:focus {
+  border-color: #4CAF50;
+  outline: none;
+}
+
+.options {
+  grid-column: 2 / 3;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.option input {
+  width: 16px;
+  height: 16px;
+}
+
+.btn-submit {
+  grid-column: 1 / -1;
+  margin-top: 20px;
+  padding: 12px;
+  background: #4285f4;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  transition: background 0.3s ease;
+}
+
+.btn-submit:hover {
+  background: #357ae8;
+}
+
+@media (max-width: 600px) {
+  form { grid-template-columns: 1fr; }
+  form label { text-align: left; }
+  .options { grid-column: 1 / -1; }
+}
+/* Common button styling */
+button {
+    width: 100%;
+    padding: 12px;
+    background-color: #4285F4;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    box-sizing: border-box;
+    margin: 15px 0;
+    font-size: 16px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+/* Button hover effect */
+button:hover {
+    background-color: #357ae8; /* Slightly darker blue */
+}

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AI Survey</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='survey.css') }}">
+</head>
+<body class="survey-page">
+
+  <div class="survey-container">
+    <h1>AI Survey Form</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flash-messages">
+          {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    <!-- Note the method="POST" here -->
+    <form id="survey-form" method="POST" action="{{ url_for('survey') }}">
+      {{ form.hidden_tag() }}
+
+      <div class="grid">
+        <label for="name">Name</label>
+        {{ form.name(class="input") }}
+
+        <label for="birth_date">Birth Date</label>
+        {{ form.birth_date(class="input") }}
+
+        <label for="education_level">Education Level</label>
+        {{ form.education_level(class="input") }}
+
+        <label for="city">City</label>
+        {{ form.city(class="input") }}
+
+        <label>Gender</label>
+        <div class="options">
+          {% for g in form.gender %}
+            <label class="option">
+              {{ g(class="radio") }} {{ g.label.text }}
+            </label>
+          {% endfor %}
+        </div>
+
+        <label>Models Tried</label>
+        <div class="options">
+          {% for m in form.models %}
+            <div class="model-pair">
+              <label class="option">
+                {{ m(class="checkbox") }} {{ m.label.text }}
+              </label>
+              <input
+                type="text"
+                placeholder="{{ m.label.text }} Cons"
+                class="cons-field input"
+                data-model="{{ m.label.text }}"
+                name="{{ m.label.text|lower }}_cons"
+              />
+            </div>
+          {% endfor %}
+        </div>
+
+        <label for="use_case">Use Case</label>
+        {{ form.use_case(class="input") }}
+      </div>
+
+      <button type="submit" class="btn-submit">Submit</button>
+    </form>
+  </div>
+
+  <script>
+    // Prevent any accidental GET and handle AJAX if desired
+    document.getElementById('survey-form').addEventListener('submit', function (e) {
+      // Comment this out if you want a normal POST redirect
+      e.preventDefault();
+
+      // Gather all form data
+      let formData = new FormData(this);
+      let json = {};
+      formData.forEach((v, k) => {
+        if (json[k]) {
+          // handle multiple models
+          if (!Array.isArray(json[k])) json[k] = [json[k]];
+          json[k].push(v);
+        } else {
+          json[k] = v;
+        }
+      });
+
+      fetch('/survey/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(json),
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success) {
+          alert('Survey sent!');
+          window.location.href = "{{ url_for('home') }}";
+        } else {
+          alert('Error: ' + data.message);
+        }
+      }).catch(console.error);
+    });
+
+    // Toggle the "cons" fields
+    document.querySelectorAll('.model-pair').forEach(pair => {
+      let cb = pair.querySelector('input[type=checkbox]'),
+          cf = pair.querySelector('.cons-field');
+      cf.style.display = cb.checked ? 'block' : 'none';
+      cb.addEventListener('change', () => {
+        cf.style.display = cb.checked ? 'block' : 'none';
+      });
+    });
+  </script>
+
+</body>
+</html>

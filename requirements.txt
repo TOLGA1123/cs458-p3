@@ -1,0 +1,7 @@
+selenium
+flask
+undetected-chromedriver
+oauthlib
+authlib
+setuptools
+flask_wtf
