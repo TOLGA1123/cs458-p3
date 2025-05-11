@@ -37,7 +37,7 @@ class WebSurveyEndToEndTest(unittest.TestCase):
         WebDriverWait(driver, 10).until(EC.url_contains("/survey"))
 
         driver.find_element(By.ID, "name").send_keys("Jane Doe")
-        driver.find_element(By.ID, "birth_date").send_keys("2015-05-01")
+        driver.find_element(By.ID, "birth_date").send_keys("01-05-2015")
 
         Select(driver.find_element(By.ID, "education_level")).select_by_visible_text("Bachelor's")
         driver.find_element(By.ID, "city").send_keys("Ankara")

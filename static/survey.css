@@ -111,3 +111,7 @@ button {
 button:hover {
     background-color: #357ae8; /* Slightly darker blue */
 }
+.btn-submit:disabled {
+    background-color: #cccccc; /* Disabled gray color */
+    cursor: not-allowed;
+  }

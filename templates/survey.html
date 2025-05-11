@@ -30,7 +30,10 @@
         {{ form.name(class="input") }}
 
         <label for="birth_date">Birth Date</label>
-        {{ form.birth_date(class="input") }}
+        {{ form.birth_date(class="input", id="birth_date") }}
+        <small id="birthdate_error" class="text-danger" style="display:none;">
+          Birthdate cannot be in the future.
+        </small>
 
         <label for="education_level">Education Level</label>
         {{ form.education_level(class="input") }}
@@ -69,68 +72,114 @@
         {{ form.use_case(class="input") }}
       </div>
 
-      <button type="submit" id="send-btn" class="btn-submit">Submit</button>
+      <button type="submit" id="send-btn" class="btn-submit" disabled >Send</button>
     </form>
   </div>
 
   <script>
-    document.getElementById('survey-form').addEventListener('submit', function (e) {
-  // Prevent the form from submitting normally
-  e.preventDefault();
+  function validateForm() {
+    const sendBtn = document.getElementById("send-btn");
 
-  // Check if at least one model checkbox is selected
-  let modelChecked = false;
-  document.querySelectorAll('input[type=checkbox]').forEach(cb => {
-    if (cb.checked) {
-      modelChecked = true;
-    }
-  });
+    const name = document.querySelector('[name="name"]').value.trim();
+    const birthDateInput = document.getElementById("birth_date");
+    const birthDate = new Date(birthDateInput.value);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-  if (!modelChecked) {
-    // Show an alert or flash message if no model is selected
-    alert("Please select at least one model.");
-    return; // Prevent form submission
+    const education = document.querySelector('[name="education_level"]').value.trim();
+    const city = document.querySelector('[name="city"]').value.trim();
+    const useCase = document.querySelector('[name="use_case"]').value.trim();
+
+    const modelCheckboxes = document.querySelectorAll('input[type=checkbox]');
+    let modelChecked = false;
+    modelCheckboxes.forEach(cb => {
+      if (cb.checked) modelChecked = true;
+    });
+
+    const genderSelected = document.querySelector('input[type=radio][name="gender"]:checked');
+    const validBirthDate = birthDateInput.value && birthDate <= today;
+
+    // Show or hide birthdate error
+    const birthDateError = document.getElementById("birthdate_error");
+    birthDateError.style.display = validBirthDate ? "none" : "block";
+
+    const formValid = (
+      name &&
+      validBirthDate &&
+      education &&
+      city &&
+      useCase &&
+      modelChecked &&
+      genderSelected
+    );
+
+    sendBtn.disabled = !formValid;
   }
 
-  // Gather all form data
-  let formData = new FormData(this);
-  let json = {};
-  formData.forEach((v, k) => {
-    if (json[k]) {
-      // handle multiple models
-      if (!Array.isArray(json[k])) json[k] = [json[k]];
-      json[k].push(v);
-    } else {
-      json[k] = v;
-    }
+  // Attach validateForm to all form inputs
+  window.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll('#survey-form input, #survey-form select, #survey-form textarea').forEach(input => {
+      input.addEventListener('input', validateForm);
+      input.addEventListener('change', validateForm);
+    });
+
+    // Initialize validation on page load
+    validateForm();
   });
 
-      fetch('/survey/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(json),
-      })
-      .then(r => r.json())
-      .then(data => {
-        if (data.success) {
-          alert('Survey sent!');
-          window.location.href = "{{ url_for('home') }}";
-        } else {
-          alert('Error: ' + data.message);
-        }
-      }).catch(console.error);
+  // Submit handler
+  document.getElementById('survey-form').addEventListener('submit', function (e) {
+    e.preventDefault(); // Prevent default form submission
+
+    // Final validation before submission
+    validateForm();
+    const sendBtn = document.getElementById("send-btn");
+    if (sendBtn.disabled) {
+      alert("Please fill in all required fields correctly.");
+      return;
+    }
+
+    // Gather form data
+    let formData = new FormData(this);
+    let json = {};
+    formData.forEach((v, k) => {
+      if (json[k]) {
+        if (!Array.isArray(json[k])) json[k] = [json[k]];
+        json[k].push(v);
+      } else {
+        json[k] = v;
+      }
     });
 
-    // Toggle the "cons" fields
-    document.querySelectorAll('.model-pair').forEach(pair => {
-      let cb = pair.querySelector('input[type=checkbox]'),
-          cf = pair.querySelector('.cons-field');
+    // Send form data to backend
+    fetch('/survey/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(json),
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.success) {
+        alert('Survey sent!');
+        window.location.href = "{{ url_for('home') }}";
+      } else {
+        alert('Error: ' + data.message);
+      }
+    }).catch(console.error);
+  });
+
+  // Toggle "cons" text fields based on checkbox state
+  document.querySelectorAll('.model-pair').forEach(pair => {
+    let cb = pair.querySelector('input[type=checkbox]'),
+        cf = pair.querySelector('.cons-field');
+    cf.style.display = cb.checked ? 'block' : 'none';
+    cb.addEventListener('change', () => {
       cf.style.display = cb.checked ? 'block' : 'none';
-      cb.addEventListener('change', () => {
-        cf.style.display = cb.checked ? 'block' : 'none';
-      });
+      validateForm(); // Re-validate when a model is checked/unchecked
     });
-  </script>
+  });
+</script>
+
 
 </body>
 </html>
