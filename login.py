@@ -165,24 +165,36 @@ def survey():
 @app.route("/survey/send", methods=["POST"])
 def send_survey():
     data = request.get_json(force=True)
+    print(data)
 
-    model_cons = data.get("model_cons", {})
-    cons_section = "\n".join([f"{model}: {reason}" for model, reason in model_cons.items()])
+    # Extract models tried and cons
+    models_tried = data.get("models", [])
+    model_cons = {}
 
-    body = "\n".join(
-        [
-            f"Name: {data.get('name', '')}",
-            f"Birth Date: {data.get('birth_date', '')}",
-            f"Education Level: {data.get('education_level', '')}",
-            f"City: {data.get('city', '')}",
-            f"Gender: {data.get('gender', '')}",
-            f"Models Tried: {', '.join(data.get('models_tried', []))}",
-            "Defects/Cons Per Model:",
-            cons_section,
-            f"Use Case: {data.get('use_case', '')}",
-        ]
-    )
+    # Loop over the keys and their corresponding cons
+    for key, value in data.items():
+        if key.endswith("_cons"):
+            model = key.rsplit("_cons", 1)[0].capitalize()  # Get the model name and capitalize it
+            if value.strip():
+                model_cons[model] = value.strip()
 
+    cons_section = "\n".join([f"{model}: {reason}" for model, reason in model_cons.items()]) or "None provided"
+    models_line = f"Models Tried: {', '.join(models_tried) if models_tried else 'None'}"
+    
+    # Build the email body with all relevant information
+    body = "\n".join([
+        f"Name: {data.get('name', '')}",
+        f"Birth Date: {data.get('birth_date', '')}",
+        f"Education Level: {data.get('education_level', '')}",
+        f"City: {data.get('city', '')}",
+        f"Gender: {data.get('gender', '')}",
+        models_line,
+        "Defects/Cons Per Model:",
+        cons_section,
+        f"Use Case: {data.get('use_case', '')}",
+    ])
+
+    # Create the email message
     msg = Message(
         subject="AI Survey Result",
         sender="test.hesap458@gmail.com",
@@ -197,6 +209,9 @@ def send_survey():
     except SMTPException as exc:
         flash(f"Error: {exc}", "error")
         return jsonify(success=False, message=f"Mail error: {exc}"), 500
+
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)

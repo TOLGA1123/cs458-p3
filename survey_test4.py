@@ -46,17 +46,23 @@ class WebSurveyDuplicateSendTest(unittest.TestCase):
 
         driver.find_element(By.XPATH, "//input[@name='gender' and @value='Female']").click()
 
-        # Select ChatGPT model
+        desired_models = ["ChatGPT", "Bard"]
         model_pairs = driver.find_elements(By.CSS_SELECTOR, ".model-pair")
+
         for pair in model_pairs:
             label = pair.find_element(By.CSS_SELECTOR, "label.option")
-            if label.text.strip() == "ChatGPT":
+            label_text = label.text.strip()  # This should work fine if the model names are clean
+
+            if label_text in desired_models:
                 checkbox = label.find_element(By.TAG_NAME, "input")
                 if not checkbox.is_selected():
                     checkbox.click()
+
+                # Find and clear cons input, then enter new value
                 cons_input = pair.find_element(By.CSS_SELECTOR, ".cons-field")
                 cons_input.clear()
                 cons_input.send_keys("None")
+
 
         driver.find_element(By.ID, "use_case").send_keys("Helps me summarize articles.")
 
