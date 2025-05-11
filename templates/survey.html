@@ -74,111 +74,104 @@
 
       <button type="submit" id="send-btn" class="btn-submit" disabled >Send</button>
     </form>
+    <div id="model_error" class="text-danger" style="display:none;">You must select at least one AI model.</div>
   </div>
 
   <script>
-  function validateForm() {
-    const sendBtn = document.getElementById("send-btn");
+function validateForm() {
+  const sendBtn = document.getElementById("send-btn");
 
-    const name = document.querySelector('[name="name"]').value.trim();
-    const birthDateInput = document.getElementById("birth_date");
-    const birthDate = new Date(birthDateInput.value);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+  const name = document.querySelector('[name="name"]').value.trim();
+  const birthDateInput = document.getElementById("birth_date");
+  const birthDate = new Date(birthDateInput.value);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-    const education = document.querySelector('[name="education_level"]').value.trim();
-    const city = document.querySelector('[name="city"]').value.trim();
-    const useCase = document.querySelector('[name="use_case"]').value.trim();
+  const education = document.querySelector('[name="education_level"]').value.trim();
+  const city = document.querySelector('[name="city"]').value.trim();
+  const useCase = document.querySelector('[name="use_case"]').value.trim();
+  const genderSelected = document.querySelector('input[type=radio][name="gender"]:checked');
+  const validBirthDate = birthDateInput.value && birthDate <= today;
 
-    const modelCheckboxes = document.querySelectorAll('input[type=checkbox]');
-    let modelChecked = false;
-    modelCheckboxes.forEach(cb => {
-      if (cb.checked) modelChecked = true;
-    });
+  // Show or hide birthdate error
+  const birthDateError = document.getElementById("birthdate_error");
+  birthDateError.style.display = validBirthDate ? "none" : "block";
 
-    const genderSelected = document.querySelector('input[type=radio][name="gender"]:checked');
-    const validBirthDate = birthDateInput.value && birthDate <= today;
+  const formValid = (
+    name &&
+    validBirthDate &&
+    education &&
+    city &&
+    useCase &&
+    genderSelected
+  );
 
-    // Show or hide birthdate error
-    const birthDateError = document.getElementById("birthdate_error");
-    birthDateError.style.display = validBirthDate ? "none" : "block";
+  sendBtn.disabled = !formValid;
+}
 
-    const formValid = (
-      name &&
-      validBirthDate &&
-      education &&
-      city &&
-      useCase &&
-      modelChecked &&
-      genderSelected
-    );
+window.addEventListener("DOMContentLoaded", function () {
+  document.querySelectorAll('#survey-form input, #survey-form select, #survey-form textarea').forEach(input => {
+    input.addEventListener('input', validateForm);
+    input.addEventListener('change', validateForm);
+  });
 
-    sendBtn.disabled = !formValid;
+  validateForm();
+});
+
+// Submit handler
+document.getElementById('survey-form').addEventListener('submit', function (e) {
+  e.preventDefault(); // Prevent default form submission
+
+  const modelChecked = document.querySelectorAll('input[type=checkbox]:checked').length > 0;
+  const modelError = document.getElementById("model_error");
+
+  if (!modelChecked) {
+    modelError.style.display = "block";
+    return;
+  } else {
+    modelError.style.display = "none";
   }
 
-  // Attach validateForm to all form inputs
-  window.addEventListener("DOMContentLoaded", function () {
-    document.querySelectorAll('#survey-form input, #survey-form select, #survey-form textarea').forEach(input => {
-      input.addEventListener('input', validateForm);
-      input.addEventListener('change', validateForm);
-    });
-
-    // Initialize validation on page load
-    validateForm();
-  });
-
-  // Submit handler
-  document.getElementById('survey-form').addEventListener('submit', function (e) {
-    e.preventDefault(); // Prevent default form submission
-
-    // Final validation before submission
-    validateForm();
-    const sendBtn = document.getElementById("send-btn");
-    if (sendBtn.disabled) {
-      alert("Please fill in all required fields correctly.");
-      return;
+  // Gather form data
+  let formData = new FormData(this);
+  let json = {};
+  formData.forEach((v, k) => {
+    if (json[k]) {
+      if (!Array.isArray(json[k])) json[k] = [json[k]];
+      json[k].push(v);
+    } else {
+      json[k] = v;
     }
-
-    // Gather form data
-    let formData = new FormData(this);
-    let json = {};
-    formData.forEach((v, k) => {
-      if (json[k]) {
-        if (!Array.isArray(json[k])) json[k] = [json[k]];
-        json[k].push(v);
-      } else {
-        json[k] = v;
-      }
-    });
-
-    // Send form data to backend
-    fetch('/survey/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(json),
-    })
-    .then(r => r.json())
-    .then(data => {
-      if (data.success) {
-        alert('Survey sent!');
-        window.location.href = "{{ url_for('home') }}";
-      } else {
-        alert('Error: ' + data.message);
-      }
-    }).catch(console.error);
   });
 
-  // Toggle "cons" text fields based on checkbox state
-  document.querySelectorAll('.model-pair').forEach(pair => {
-    let cb = pair.querySelector('input[type=checkbox]'),
-        cf = pair.querySelector('.cons-field');
+  // Send form data to backend
+  fetch('/survey/send', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(json),
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      alert('Survey sent!');
+      window.location.href = "{{ url_for('home') }}";
+    } else {
+      alert('Error: ' + data.message);
+    }
+  }).catch(console.error);
+});
+
+// Toggle cons input field visibility
+document.querySelectorAll('.model-pair').forEach(pair => {
+  let cb = pair.querySelector('input[type=checkbox]'),
+      cf = pair.querySelector('.cons-field');
+  cf.style.display = cb.checked ? 'block' : 'none';
+  cb.addEventListener('change', () => {
     cf.style.display = cb.checked ? 'block' : 'none';
-    cb.addEventListener('change', () => {
-      cf.style.display = cb.checked ? 'block' : 'none';
-      validateForm(); // Re-validate when a model is checked/unchecked
-    });
   });
+});
 </script>
+
 
 
 </body>

@@ -68,6 +68,10 @@ class WebSurveyEndToEndTest(unittest.TestCase):
         self.assertTrue(send_btn.is_enabled())
         send_btn.click()
 
+        alert = WebDriverWait(driver, 10).until(EC.alert_is_present())
+        self.assertIn("Survey sent", alert.text)
+        alert.accept()
+        
         # --- EMAIL VERIFICATION ---
         email_found = self.wait_for_email(
             recipient="test.hesap458@gmail.com",
