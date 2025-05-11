@@ -157,9 +157,8 @@ def survey():
     form = SurveyForm.SurveyForm()
 
     if form.validate_on_submit():
-        # Process the form data here, for example, save it to the database or process it.
         flash("Survey submitted successfully!", "success")
-        return redirect(url_for('home'))  # Redirect to a thank-you page, for example.
+        return redirect(url_for('home'))
 
     return render_template('survey.html', form=form)
 
@@ -193,8 +192,10 @@ def send_survey():
 
     try:
         mail.send(msg)
+        flash("Survey sent successfully!", "success")
         return jsonify(success=True, message="Mail sent"), 200
     except SMTPException as exc:
+        flash(f"Error: {exc}", "error")
         return jsonify(success=False, message=f"Mail error: {exc}"), 500
 
 if __name__ == '__main__':

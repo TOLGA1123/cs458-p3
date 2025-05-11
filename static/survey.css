@@ -115,3 +115,28 @@ button:hover {
     background-color: #cccccc; /* Disabled gray color */
     cursor: not-allowed;
   }
+.flash-messages {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+}
+
+.flash {
+    padding: 10px;
+    margin: 5px;
+    border-radius: 5px;
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+.flash.success {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.flash.error {
+    background-color: #f8d7da;
+    color: #721c24;
+}

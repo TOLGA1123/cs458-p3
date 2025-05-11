@@ -75,6 +75,8 @@
       <button type="submit" id="send-btn" class="btn-submit" disabled >Send</button>
     </form>
     <div id="model_error" class="text-danger" style="display:none;">You must select at least one AI model.</div>
+    <div id="multiple_send_error" class="text-danger" style="display: none;"> You can only submit same form contents once.</div>
+    <div class="flash-messages"></div>
   </div>
 
   <script>
@@ -93,7 +95,6 @@ function validateForm() {
   const genderSelected = document.querySelector('input[type=radio][name="gender"]:checked');
   const validBirthDate = birthDateInput.value && birthDate <= today;
 
-  // Show or hide birthdate error
   const birthDateError = document.getElementById("birthdate_error");
   birthDateError.style.display = validBirthDate ? "none" : "block";
 
@@ -118,21 +119,23 @@ window.addEventListener("DOMContentLoaded", function () {
   validateForm();
 });
 
-// Submit handler
 document.getElementById('survey-form').addEventListener('submit', function (e) {
-  e.preventDefault(); // Prevent default form submission
+  e.preventDefault();
+
+  const sendBtn = document.getElementById("send-btn");
+  sendBtn.disabled = true; // Disable the submit button to prevent multiple submissions
 
   const modelChecked = document.querySelectorAll('input[type=checkbox]:checked').length > 0;
   const modelError = document.getElementById("model_error");
 
   if (!modelChecked) {
     modelError.style.display = "block";
+    sendBtn.disabled = false; // Re-enable the button if there's an error
     return;
   } else {
     modelError.style.display = "none";
   }
 
-  // Gather form data
   let formData = new FormData(this);
   let json = {};
   formData.forEach((v, k) => {
@@ -144,22 +147,48 @@ document.getElementById('survey-form').addEventListener('submit', function (e) {
     }
   });
 
-  // Send form data to backend
+  const newSubmission = JSON.stringify(json);
+  const lastSubmission = localStorage.getItem("lastSurveySubmission");
+
+  if (newSubmission === lastSubmission) {
+    const multipleSendErrorDiv = document.getElementById("multiple_send_error");
+    multipleSendErrorDiv.style.display = "block";
+    sendBtn.disabled = false; // Re-enable the button if the form is a duplicate submission
+    return;
+  }
+
   fetch('/survey/send', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(json),
+    body: newSubmission,
   })
   .then(r => r.json())
   .then(data => {
     if (data.success) {
-      alert('Survey sent!');
-      window.location.href = "{{ url_for('home') }}";
+        localStorage.setItem("lastSurveySubmission", newSubmission);
+        // Show success message on the page instead of using an alert
+        flashMessage('Survey sent!', 'success');
     } else {
-      alert('Error: ' + data.message);
+        flashMessage('Error: ' + data.message, 'error');
     }
-  }).catch(console.error);
+  }).catch(console.error)
+  .finally(() => {
+    sendBtn.disabled = false; // Re-enable the submit button after the request is completed
+  });
 });
+
+function flashMessage(message, category) {
+    const flashContainer = document.querySelector('.flash-messages');
+    const flashMessage = document.createElement('div');
+    flashMessage.className = `flash ${category}`;
+    flashMessage.innerText = message;
+    flashContainer.appendChild(flashMessage);
+
+    // Remove the message after 5 seconds
+    setTimeout(() => {
+        flashMessage.remove();
+    }, 5000);
+}
 
 // Toggle cons input field visibility
 document.querySelectorAll('.model-pair').forEach(pair => {
@@ -171,6 +200,7 @@ document.querySelectorAll('.model-pair').forEach(pair => {
   });
 });
 </script>
+
 
 
 
