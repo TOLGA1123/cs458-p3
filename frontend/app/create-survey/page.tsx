@@ -56,6 +56,7 @@ interface CheckboxQuestion extends BaseQuestion {
 type Question = MultipleChoiceQuestion | RatingQuestion | TextQuestion | DropdownQuestion | CheckboxQuestion
 
 export default function CreateSurveyPage() {
+  const MAX_QUESTIONS = 100;
   const [surveyTitle, setSurveyTitle] = useState("Untitled Survey")
   const [surveyDescription, setSurveyDescription] = useState("")
   const [questions, setQuestions] = useState<Question[]>([])
@@ -96,6 +97,7 @@ export default function CreateSurveyPage() {
 
   // Add a new question
   const addQuestion = (type: QuestionType) => {
+    
     const baseQuestion: BaseQuestion = {
       id: generateId(),
       type,
@@ -368,6 +370,12 @@ export default function CreateSurveyPage() {
   }
 
   const saveSurvey = () => {
+
+    if (questions.length > MAX_QUESTIONS) {
+    alert("too many questions in the survey, limit of 100 questions reached");
+    return;                       // 👈 abort save-flow
+    } 
+
     const survey = {
       id: editingSurveyId || generateId(),
       title: surveyTitle,

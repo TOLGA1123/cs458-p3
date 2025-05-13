@@ -13,7 +13,11 @@ class CreateSurveyTest(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.driver = webdriver.Chrome()
+        # tell Chrome not to close when the test finishes
+        opts = webdriver.ChromeOptions()
+        opts.add_experimental_option("detach", True)
+        cls.driver = webdriver.Chrome(options=opts)
+
         cls.driver.get("http://localhost:3000/create-survey")
         cls.driver.maximize_window()
 
@@ -124,8 +128,9 @@ class CreateSurveyTest(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        time.sleep(1)
-        cls.driver.quit()
+        #time.sleep(1)
+        #cls.driver.quit()
+        pass
 
 
 if __name__ == "__main__":
