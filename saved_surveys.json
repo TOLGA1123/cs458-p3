@@ -1,0 +1,46 @@
+[
+  {
+    "title": "Survey",
+    "questions": [
+      {
+        "text": "Do you own a car?",
+        "type": "multiple",
+        "options": [
+          "Yes",
+          "No"
+        ],
+        "min_rating": null,
+        "max_rating": null,
+        "show_if_question": null,
+        "show_if_value": null
+      },
+      {
+        "text": "How often?",
+        "type": "dropdown",
+        "options": [
+          "Always",
+          "Never"
+        ],
+        "min_rating": null,
+        "max_rating": null,
+        "show_if_question": "0",
+        "show_if_value": "Yes"
+      },
+      {
+        "text": "Why",
+        "type": "text",
+        "options": [],
+        "min_rating": null,
+        "max_rating": null,
+        "show_if_question": "1",
+        "show_if_value": "Never"
+      }
+    ],
+    "created_at": "2025-05-13T16:29:32.959192"
+  },
+  {
+    "title": "AwesomeSurvey",
+    "questions": [],
+    "created_at": "2025-05-13T16:31:45.313564"
+  }
+]

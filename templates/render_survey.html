@@ -1,0 +1,143 @@
+<!-- templates/render_survey.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ survey.title }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    .question-block { margin-bottom: 1.5rem; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body class="p-4">
+  <div class="container">
+    <h2 class="mb-4">{{ survey.title }}</h2>
+    <form id="survey_form">
+      {% for question in survey.questions %}
+        <div class="question-block mb-3 {% if question.show_if_question is not none and question.show_if_value %}hidden{% endif %}"
+          data-index="{{ loop.index0 }}"
+          {% if question.show_if_question is not none and question.show_if_value %}
+            data-show-if-question="{{ question.show_if_question }}"
+            data-show-if-value="{{ question.show_if_value }}"
+          {% endif %}>
+          <label class="form-label">{{ loop.index }}. {{ question.text }}</label>
+          {% if question.type == 'text' %}
+            <input type="text" class="form-control trigger-input" name="q{{ loop.index0 }}">
+          {% elif question.type == 'multiple' %}
+            {% for opt in question.options %}
+              <div class="form-check">
+                <input class="form-check-input trigger-input" type="radio" name="q{{ loop.index0 }}" value="{{ opt }}">
+                <label class="form-check-label">{{ opt }}</label>
+              </div>
+            {% endfor %}
+          {% elif question.type == 'checkbox' %}
+            {% for opt in question.options %}
+              <div class="form-check">
+                <input class="form-check-input trigger-input" type="checkbox" name="q{{ loop.index0 }}" value="{{ opt }}">
+                <label class="form-check-label">{{ opt }}</label>
+              </div>
+            {% endfor %}
+          {% elif question.type == 'dropdown' %}
+            <select class="form-select trigger-input" name="q{{ loop.index0 }}">
+              <option value="">-- Select --</option>
+              {% for opt in question.options %}
+                <option value="{{ opt }}">{{ opt }}</option>
+              {% endfor %}
+            </select>
+          {% elif question.type == 'rating' %}
+            <input type="range" class="form-range trigger-input" name="q{{ loop.index0 }}" min="{{ question.min_rating }}" max="{{ question.max_rating }}">
+          {% endif %}
+        </div>
+      {% endfor %}
+    </form>
+  </div>
+
+<script>
+ document.addEventListener('DOMContentLoaded', () => {
+const form = document.getElementById('survey_form');
+const questions = Array.from(document.querySelectorAll('.question-block'));
+
+function getValue(el) {
+ if (!el) return '';
+ // Handle NodeList for radio buttons and checkboxes
+if (el.length !== undefined && el.forEach) { // Check if it's a NodeList or array-like
+ const type = el[0]?.type; // Use optional chaining in case el is empty
+ if (type === 'checkbox') {
+ return Array.from(el).filter(i => i.checked).map(i => i.value).join(',');
+ }
+if (type === 'radio') {
+ const sel = Array.from(el).find(i => i.checked);
+ return sel ? sel.value : '';
+ }
+// Fallback for other multiple elements if necessary, though typically covered
+ return el[0]?.value || ''; // Return value of the first element as a fallback
+}
+ return el.value || '';
+}
+
+document.getElementById("survey_form")
+  .addEventListener("change", evaluateConditions);
+
+function evaluateConditions() {
+  document.querySelectorAll(".question-block").forEach(block => {
+    const logicQ   = block.querySelector(".logic-question").value;
+    const logicVal = block.querySelector(".logic-value").value.trim();
+
+    if (logicQ !== "" && logicVal !== "") {
+      const parentBlock = document.querySelectorAll(".question-block")[logicQ];
+      const triggerEls  = parentBlock.querySelectorAll("input, select, textarea");
+      let currentValue = "";
+
+      if (triggerEls[0].type === "radio") {
+        const sel = Array.from(triggerEls).find(i => i.checked);
+        currentValue = sel ? sel.value : "";
+      }
+      else if (triggerEls[0].type === "checkbox") {
+        currentValue = Array.from(triggerEls)
+                            .filter(i => i.checked)
+                            .map(i => i.value)
+                            .join(",");
+      }
+      else {
+        currentValue = triggerEls[0].value;
+      }
+
+      block.style.display = (currentValue === logicVal) ? "" : "none";
+    } else {
+      block.style.display = "";
+    }
+  });
+}
+
+
+      // Optional function to reset values of hidden questions
+      // function resetQuestionValues(questionBlock) {
+      //   questionBlock.querySelectorAll('input, select, textarea').forEach(input => {
+      //     const type = input.type;
+      //     if (type === 'checkbox' || type === 'radio') {
+      //       input.checked = false;
+      //     } else if (type === 'select-one') {
+      //       input.selectedIndex = 0;
+      //     } else if (type !== 'button' && type !== 'submit' && type !== 'reset') {
+      //       input.value = '';
+      //     }
+      //   });
+      // }
+
+
+ form.querySelectorAll('.trigger-input').forEach(inp => {
+ inp.addEventListener('change', evaluateConditions);
+        // Also listen for 'input' event for text and range types for more responsiveness
+        if (inp.type === 'text' || inp.type === 'range') {
+             inp.addEventListener('input', evaluateConditions);
+        }
+});
+
+// Initial evaluation on page load
+evaluateConditions();
+});
+ </script>
+</body>
+</html>

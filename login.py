@@ -210,7 +210,51 @@ def send_survey():
         flash(f"Error: {exc}", "error")
         return jsonify(success=False, message=f"Mail error: {exc}"), 500
 
+# In-memory store for survey templates
+SURVEY_TEMPLATES = {}
 
+import json
+from datetime import datetime
+
+SURVEY_SAVE_PATH = "saved_surveys.json"
+
+@app.route("/create-survey", methods=["GET", "POST"])
+def create_survey():
+    if request.method == "POST":
+        try:
+            survey_data = request.get_json()
+            survey_data["created_at"] = datetime.now().isoformat()
+
+            if os.path.exists(SURVEY_SAVE_PATH):
+                with open(SURVEY_SAVE_PATH, "r") as f:
+                    surveys = json.load(f)
+            else:
+                surveys = []
+
+            surveys.append(survey_data)
+            survey_id = len(surveys) - 1  # Use index as ID
+
+            with open(SURVEY_SAVE_PATH, "w") as f:
+                json.dump(surveys, f, indent=2)
+
+            return jsonify(success=True, message="Survey saved!", id=survey_id), 200
+        except Exception as e:
+            return jsonify(success=False, message=str(e)), 500
+
+    return render_template("create_survey.html")
+
+@app.route("/survey/<int:survey_id>")
+def view_survey(survey_id):
+    if os.path.exists(SURVEY_SAVE_PATH):
+        with open(SURVEY_SAVE_PATH, "r") as f:
+            surveys = json.load(f)
+    else:
+        return "No surveys found.", 404
+
+    if 0 <= survey_id < len(surveys):
+        return render_template("render_survey.html", survey=surveys[survey_id])
+    else:
+        return "Survey not found.", 404
 
 
 if __name__ == '__main__':
