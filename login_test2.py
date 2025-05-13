@@ -12,14 +12,13 @@ import unittest
 class LoginTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        #cls.driver = webdriver.Chrome()
-        cls.driver = uc.Chrome()        #normal google chrome blocks selenium logins
-        cls.driver.get("http://127.0.0.1:5000/login")
+        cls.driver = uc.Chrome()
+        cls.driver.get("http://127.0.0.1:3000/")
         cls.driver.maximize_window()
         
     def setUp(self):
         """Ensure a fresh session before each test"""
-        self.driver.get("http://127.0.0.1:5000/login")
+        self.driver.get("http://127.0.0.1:3000/")
         self.driver.delete_all_cookies()
         self.driver.execute_script("window.localStorage.clear();")
         self.driver.execute_script("window.sessionStorage.clear();")
@@ -48,10 +47,8 @@ class LoginTest(unittest.TestCase):
         
         password_next_button = WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.ID, "passwordNext")))
         driver.execute_script("arguments[0].click();", password_next_button)
-        continue_button = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//button/span[contains(text(), 'Continue')]")))
-        driver.execute_script("arguments[0].click();", continue_button)
-        WebDriverWait(driver, 30).until(EC.url_to_be("http://127.0.0.1:5000/"))
-        self.assertEqual(driver.current_url, "http://127.0.0.1:5000/")
+        WebDriverWait(driver, 30).until(EC.url_to_be("http://127.0.0.1:3000/home"))
+        self.assertEqual(driver.current_url, "http://127.0.0.1:3000/home")
         cookies = driver.get_cookies()
         session_cookie = next((cookie for cookie in cookies if cookie['name'] == 'session'), None)
         self.assertIsNotNone(session_cookie, "Session cookie should exist after login.")
@@ -68,9 +65,9 @@ class LoginTest(unittest.TestCase):
         email_input = WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.NAME, "identifier")))
         email_input.send_keys("invalidemail333@gmail.com")
         email_input.send_keys(Keys.RETURN)
-        error_message = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Couldn’t find your Google Account')]")))
+        error_message = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(), 'Couldn't find your Google Account')]")))
         self.assertIsNotNone(error_message, "Error message should be displayed for invalid email")
-        driver.get("http://127.0.0.1:5000/login")
+        driver.get("http://127.0.0.1:3000/")
         google_login_button = WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.ID, "googleLoginButton")))
         google_login_button.click()
         WebDriverWait(driver, 20).until(EC.url_contains("accounts.google.com"))
@@ -85,7 +82,6 @@ class LoginTest(unittest.TestCase):
         password_input = WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.XPATH, "//input[@type='password']")))
         password_input.send_keys("WrongPassword123")
 
-        
         password_next_button = WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.ID, "passwordNext")))
         driver.execute_script("arguments[0].click();", password_next_button)
         WebDriverWait(driver, 20).until(EC.url_contains("accounts.google.com"))
@@ -93,9 +89,6 @@ class LoginTest(unittest.TestCase):
         cookies = driver.get_cookies()
         session_cookie = next((cookie for cookie in cookies if cookie['name'] == 'session'), None)
         self.assertIsNone(session_cookie, "Session cookie should NOT exist after failed login")
-
-    
-
 
     @classmethod
     def tearDownClass(cls):

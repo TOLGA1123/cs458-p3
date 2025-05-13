@@ -12,14 +12,13 @@ import unittest
 class LoginTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        #cls.driver = webdriver.Chrome()
-        cls.driver = uc.Chrome()        #normal google chrome blocks selenium logins
-        cls.driver.get("http://127.0.0.1:5000/login")
+        cls.driver = uc.Chrome()
+        cls.driver.get("http://127.0.0.1:3000/")
         cls.driver.maximize_window()
         
     def setUp(self):
         """Ensure a fresh session before each test"""
-        self.driver.get("http://127.0.0.1:5000/login")
+        self.driver.get("http://127.0.0.1:3000/")
         self.driver.delete_all_cookies()
         self.driver.execute_script("window.localStorage.clear();")
         self.driver.execute_script("window.sessionStorage.clear();")
@@ -62,7 +61,7 @@ class LoginTest(unittest.TestCase):
         error_message = driver.find_element(By.ID, "errorMessage").text
         match = re.search(r"Too many failed attempts. Please try again in (\d+) seconds.", error_message)
         self.assertIsNotNone(match, "System should display a lock message with countdown after 4th failed attempt.")
-        self.assertEqual(driver.current_url, "http://127.0.0.1:5000/login")     #should still be in the login page
+        self.assertEqual(driver.current_url, "http://127.0.0.1:3000/")     #should still be in the login page
         cookies = driver.get_cookies()
         session_cookie = next((cookie for cookie in cookies if cookie['name'] == 'session'), None)
         self.assertIsNotNone(session_cookie, "Session cookie should exist after failed login attempts.")
@@ -75,7 +74,7 @@ class LoginTest(unittest.TestCase):
         password_input.clear()
         password_input.send_keys("password123")
         login_button.click()
-        self.assertEqual(driver.current_url, "http://127.0.0.1:5000/")
+        self.assertEqual(driver.current_url, "http://127.0.0.1:3000/home")
 
 
 

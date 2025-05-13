@@ -5,3 +5,4 @@ oauthlib
 authlib
 setuptools
 flask_wtf
+flask-cors

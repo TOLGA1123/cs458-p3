@@ -12,14 +12,13 @@ import unittest
 class LoginTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        #cls.driver = webdriver.Chrome()
-        cls.driver = uc.Chrome()        #normal google chrome blocks selenium logins
-        cls.driver.get("http://127.0.0.1:5000/login")
+        cls.driver = uc.Chrome()
+        cls.driver.get("http://127.0.0.1:3000/")
         cls.driver.maximize_window()
         
     def setUp(self):
         """Ensure a fresh session before each test"""
-        self.driver.get("http://127.0.0.1:5000/login")
+        self.driver.get("http://127.0.0.1:3000/")
         self.driver.delete_all_cookies()
         self.driver.execute_script("window.localStorage.clear();")
         self.driver.execute_script("window.sessionStorage.clear();")
@@ -33,18 +32,18 @@ class LoginTest(unittest.TestCase):
     def test_two_parallel_logins(self):
         """Test logging in with two different accounts in the same test""" #one chrome + one incognito
         driver1 = webdriver.Chrome()
-        driver1.get("http://127.0.0.1:5000/login")
+        driver1.get("http://127.0.0.1:3000/")
         chrome_options = webdriver.ChromeOptions()
         chrome_options.add_argument("--incognito")
         driver2 = webdriver.Chrome(options=chrome_options)
-        driver2.get("http://127.0.0.1:5000/login")
+        driver2.get("http://127.0.0.1:3000/")
         email1 = driver1.find_element(By.ID, "user_input")
         password1 = driver1.find_element(By.ID, "password")
         login_button1 = driver1.find_element(By.ID, "loginButton")
         email1.send_keys("admin@gmail.com")
         password1.send_keys("password123")
         login_button1.click()
-        WebDriverWait(driver1, 30).until(EC.url_contains("http://127.0.0.1:5000/"))
+        WebDriverWait(driver1, 30).until(EC.url_contains("http://127.0.0.1:3000/home"))
         print("First user logged in:", driver1.current_url)
         email2 = driver2.find_element(By.ID, "user_input")
         password2 = driver2.find_element(By.ID, "password")
@@ -52,7 +51,7 @@ class LoginTest(unittest.TestCase):
         email2.send_keys("admin2@gmail.com")
         password2.send_keys("password123")
         login_button2.click()
-        WebDriverWait(driver2, 30).until(EC.url_contains("http://127.0.0.1:5000/"))
+        WebDriverWait(driver2, 30).until(EC.url_contains("http://127.0.0.1:3000/home"))
         print("Second user logged in:", driver2.current_url)
         cookies1 = driver1.get_cookies()
         cookies2 = driver2.get_cookies()
@@ -73,16 +72,16 @@ class LoginTest(unittest.TestCase):
     def test_parallel_logins_chrome_firefox(self):
         """Test logging in with two different accounts in Chrome and Firefox"""
         driver1 = webdriver.Chrome()
-        driver1.get("http://127.0.0.1:5000/login")
+        driver1.get("http://127.0.0.1:3000/")
         driver2 = webdriver.Firefox()
-        driver2.get("http://127.0.0.1:5000/login")
+        driver2.get("http://127.0.0.1:3000/")
         email1 = driver1.find_element(By.ID, "user_input")
         password1 = driver1.find_element(By.ID, "password")
         login_button1 = driver1.find_element(By.ID, "loginButton")
         email1.send_keys("admin@gmail.com")
         password1.send_keys("password123")
         login_button1.click()
-        WebDriverWait(driver1, 30).until(EC.url_contains("http://127.0.0.1:5000/"))
+        WebDriverWait(driver1, 30).until(EC.url_contains("http://127.0.0.1:3000/home"))
         print("First user logged in (Chrome):", driver1.current_url)
         email2 = driver2.find_element(By.ID, "user_input")
         password2 = driver2.find_element(By.ID, "password")
@@ -90,7 +89,7 @@ class LoginTest(unittest.TestCase):
         email2.send_keys("admin2@gmail.com")
         password2.send_keys("password123")
         login_button2.click()
-        WebDriverWait(driver2, 30).until(EC.url_contains("http://127.0.0.1:5000/"))
+        WebDriverWait(driver2, 30).until(EC.url_contains("http://127.0.0.1:3000/home"))
         print("Second user logged in (Firefox):", driver2.current_url)
         cookies1 = driver1.get_cookies()
         cookies2 = driver2.get_cookies()

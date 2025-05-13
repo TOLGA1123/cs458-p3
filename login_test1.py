@@ -13,12 +13,12 @@ class LoginTest(unittest.TestCase):
     def setUpClass(cls):
         #cls.driver = webdriver.Chrome()
         cls.driver = uc.Chrome()        #normal google chrome blocks selenium logins
-        cls.driver.get("http://127.0.0.1:5000/login")
+        cls.driver.get("http://127.0.0.1:3000/")
         cls.driver.maximize_window()
         
     def setUp(self):
         """Ensure a fresh session before each test"""
-        self.driver.get("http://127.0.0.1:5000/login")
+        self.driver.get("http://127.0.0.1:3000/")
         self.driver.delete_all_cookies()
         self.driver.execute_script("window.localStorage.clear();")
         self.driver.execute_script("window.sessionStorage.clear();")
@@ -40,8 +40,8 @@ class LoginTest(unittest.TestCase):
         password_input.clear()
         password_input.send_keys("password123")
         login_button.click()
-        WebDriverWait(driver, 30).until(EC.url_contains("http://127.0.0.1:5000/"))
-        self.assertEqual(driver.current_url, "http://127.0.0.1:5000/")      #should be redirected to home
+        WebDriverWait(driver, 30).until(EC.url_contains("http://127.0.0.1:3000/home"))
+        self.assertEqual(driver.current_url, "http://127.0.0.1:3000/home")
         cookies = driver.get_cookies()
         session_cookie = next((cookie for cookie in cookies if cookie['name'] == 'session'), None)
         self.assertIsNotNone(session_cookie, "Session cookie should exist after login.")
@@ -60,8 +60,8 @@ class LoginTest(unittest.TestCase):
         password_input.clear()
         password_input.send_keys("password123")
         login_button.click()
-        WebDriverWait(driver, 30).until(EC.url_contains("http://127.0.0.1:5000/"))
-        self.assertEqual(driver.current_url, "http://127.0.0.1:5000/")      #should be redirected to home
+        WebDriverWait(driver, 30).until(EC.url_contains("http://127.0.0.1:3000/home"))
+        self.assertEqual(driver.current_url, "http://127.0.0.1:3000/home")
         cookies = driver.get_cookies()
         session_cookie = next((cookie for cookie in cookies if cookie['name'] == 'session'), None)
         self.assertIsNotNone(session_cookie, "Session cookie should exist after login.")
@@ -82,7 +82,7 @@ class LoginTest(unittest.TestCase):
         password_input.send_keys("wrongpassword")
         login_button.click()
         WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.ID, "errorMessage")))
-        self.assertEqual(driver.current_url, "http://127.0.0.1:5000/login") #should be redirected to login again
+        self.assertEqual(driver.current_url, "http://127.0.0.1:3000/")
         error_message = driver.find_element(By.ID, "errorMessage").text
         self.assertEqual(error_message, "Invalid credentials.")
         cookies = driver.get_cookies()
