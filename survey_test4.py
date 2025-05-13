@@ -23,40 +23,56 @@ class WebSurveyDuplicateSendTest(unittest.TestCase):
 
     def test_multiple_sends_same_content(self):
         driver = self.driver
-        driver.get("http://localhost:5000/login")
+        driver.get("http://127.0.0.1:3000/")
+        driver.delete_all_cookies()
+        driver.execute_script("window.localStorage.clear();")
+        driver.execute_script("window.sessionStorage.clear();")
+        try:
+            logout_button = driver.find_element(By.ID, "logoutButton")  
+            logout_button.click()
+            time.sleep(5)
+        except:
+            pass
 
-        # --- LOGIN ---
-        driver.find_element(By.ID, "user_input").send_keys("admin@gmail.com")
-        driver.find_element(By.ID, "password").send_keys("password123")
-        driver.find_element(By.ID, "loginButton").click()
+        email_input = driver.find_element(By.ID, "user_input")
+        password_input = driver.find_element(By.ID, "password")
+        login_button = driver.find_element(By.ID, "loginButton")
+        email_input.clear()
+        email_input.send_keys("admin@gmail.com")
+        password_input.clear()
+        password_input.send_keys("password123")
+        login_button.click()
+        WebDriverWait(driver, 30).until(EC.url_contains("/Home"))
 
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.LINK_TEXT, "Go to Survey")))
-
-        # Navigate to survey page
-        driver.find_element(By.LINK_TEXT, "Go to Survey").click()
+        # --- NAVIGATE TO AI SURVEY ---
+        ai_survey_btn = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.ID, "aiSurveyBtn"))
+        )
+        ai_survey_btn.click()
+        WebDriverWait(driver, 10).until(EC.url_contains("/AI_survey"))
 
         # --- FILL FORM ---
-        WebDriverWait(driver, 10).until(EC.url_contains("/survey"))
+        WebDriverWait(driver, 10).until(EC.url_contains("/AI_survey"))
 
         driver.find_element(By.ID, "name").send_keys("Jane Doe")
-        driver.find_element(By.ID, "birth_date").send_keys("01-05-2015")
+        driver.find_element(By.ID, "birth_date").send_keys("05-01-2015")
 
         Select(driver.find_element(By.ID, "education_level")).select_by_visible_text("Bachelor's")
         driver.find_element(By.ID, "city").send_keys("Ankara")
 
-        driver.find_element(By.XPATH, "//input[@name='gender' and @value='Female']").click()
+        # Click the label for 'Female' to select the gender
+        driver.find_element(By.XPATH, "//label[contains(text(), 'Female')]").click()
 
         desired_models = ["ChatGPT", "Bard"]
         model_pairs = driver.find_elements(By.CSS_SELECTOR, ".model-pair")
 
         for pair in model_pairs:
             label = pair.find_element(By.CSS_SELECTOR, "label.option")
-            label_text = label.text.strip()  # This should work fine if the model names are clean
+            label_text = label.text.strip()
 
             if label_text in desired_models:
-                checkbox = label.find_element(By.TAG_NAME, "input")
-                if not checkbox.is_selected():
-                    checkbox.click()
+                checkbox = pair.find_element(By.CSS_SELECTOR, '[role="checkbox"]')
+                checkbox.click()
 
                 # Find and clear cons input, then enter new value
                 cons_input = pair.find_element(By.CSS_SELECTOR, ".cons-field")
@@ -79,7 +95,7 @@ class WebSurveyDuplicateSendTest(unittest.TestCase):
         multiple_send_error = WebDriverWait(driver, 10).until(
             EC.visibility_of_element_located((By.ID, "multiple_send_error"))
         )
-        self.assertIn("You can only submit same form contents once.", multiple_send_error.text)
+        self.assertIn("You can only submit same form contents once.", multiple_send_error.text.replace(u'\xa0', u' '))
 
          # --- EMAIL VERIFICATION VIA IMAP ---
         email_found = self.wait_for_email(
@@ -108,7 +124,7 @@ class WebSurveyDuplicateSendTest(unittest.TestCase):
     def check_email(self, recipient, subject_keyword, first_email_timestamp, first_email_body):
         host = "imap.gmail.com"
         username = "test.hesap458@gmail.com"
-        password = os.getenv("MAIL_APP_PASSWORD")
+        password = os.getenv("MAIL_APP_PASSWORD").replace(u'\xa0', u' ')
         multiple_emails = False
 
         try:

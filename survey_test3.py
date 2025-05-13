@@ -7,64 +7,69 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException
 
-class WebSendWithoutModelTest(unittest.TestCase):
+class WebModelSelectionTest(unittest.TestCase):
     def setUp(self):
         chrome_options = Options()
         chrome_options.add_argument("--start-maximized")
         self.driver = webdriver.Chrome(options=chrome_options)
         self.driver.implicitly_wait(10)
-        self.driver.get("http://localhost:5000/login")  # adjust URL if needed
+        self.driver.get("http://127.0.0.1:3000/AI_survey")
 
-    def test_send_without_model_selected(self):
+    def test_model_selection_validation(self):
         driver = self.driver
 
-        # --- LOGIN PHASE ---
-        email_field = driver.find_element(By.NAME, "user_input")
-        email_field.send_keys("admin@gmail.com")
-
-        password_field = driver.find_element(By.NAME, "password")
-        password_field.send_keys("password123")
-
-        login_button = driver.find_element(By.ID, "loginButton")
-        login_button.click()
-
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.LINK_TEXT, "Go to Survey")))
-
-        driver.find_element(By.LINK_TEXT, "Go to Survey").click()
-
         # --- SURVEY PAGE ---
-        WebDriverWait(driver, 10).until(EC.url_contains("/survey"))
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "name")))
 
         # --- SURVEY PHASE ---
-        driver.find_element(By.NAME, "name").send_keys("Jane Doe")
+        driver.find_element(By.ID, "name").send_keys("Jane Doe")
+        driver.find_element(By.ID, "birth_date").send_keys("01-01-1990")
 
-        # Fill a valid birth date
-        birthdate_input = driver.find_element(By.NAME, "birth_date")
-        birthdate_input.clear()
-        birthdate_input.send_keys("01-01-1990")  # format for <input type="date">
+        # Handle custom select component robustly
+        education_select = driver.find_element(By.ID, "education_level")
+        education_select.click()
+        time.sleep(0.5)  # Give time for the dropdown to render
+        # Find the option container (not just the text node)
+        option = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//div[@role='option' and .=\"Bachelor's Degree\"]"))
+        )
+        option.click()
+        # Wait for the dropdown to close (option disappears)
+        WebDriverWait(driver, 10).until(
+            EC.invisibility_of_element_located((By.XPATH, "//div[@role='option' and .=\"Bachelor's Degree\"]"))
+        )
+        driver.find_element(By.ID, "city").send_keys("Ankara")
 
-        driver.find_element(By.NAME, "education_level").send_keys("Bachelor's")
-        driver.find_element(By.NAME, "city").send_keys("Ankara")
+        # Click the label for 'Female' to select the gender
+        driver.find_element(By.XPATH, "//label[contains(text(), 'Female')]").click()
 
-        driver.find_element(By.XPATH, "//input[@name='gender' and @value='Female']").click()
+        # Select models "ChatGPT" and "Bard"
+        desired_models = ["ChatGPT", "Bard"]
+        model_pairs = driver.find_elements(By.CSS_SELECTOR, ".model-pair")
 
-        # Do not select any AI model checkboxes
-        # Skip the model selection phase by not interacting with any model checkboxes
+        for pair in model_pairs:
+            label = pair.find_element(By.CSS_SELECTOR, "label.option")
+            label_text = label.text.strip()
 
-        driver.find_element(By.NAME, "use_case").send_keys("It helps me summarize articles.")
+            if label_text in desired_models:
+                checkbox = pair.find_element(By.CSS_SELECTOR, '[role="checkbox"]')
+                checkbox.click()
+
+                # Safer and clearer way to get the associated cons input
+                cons_input = pair.find_element(By.CSS_SELECTOR, ".cons-field")
+                cons_input.clear()
+                cons_input.send_keys("None")
+
+        driver.find_element(By.ID, "use_case").send_keys("It helps me summarize articles.")
 
         send_btn = driver.find_element(By.ID, "send-btn")
-
-        # Ensure send button is enabled when no models are selected
-        self.assertTrue(send_btn.is_enabled(), "Send button should be enabled without any model selected.")
-        
-        send_btn.click()
+        self.assertTrue(send_btn.is_enabled(), "Send button should be enabled with valid model selection.")
 
         try:
             error = WebDriverWait(driver, 5).until(
                 EC.visibility_of_element_located((By.ID, "model_error"))
             )
-            self.assertIn("You must select at least one AI model", error.text)
+            self.assertIn("Please select at least one model", error.text.replace(u'\xa0', u' '))
         except TimeoutException:
             print("Error message not shown.")
 

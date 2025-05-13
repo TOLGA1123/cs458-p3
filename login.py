@@ -23,8 +23,13 @@ app.config.update(
     MAIL_SERVER="smtp.gmail.com",
     MAIL_PORT=587,
     MAIL_USE_TLS=True,
-    MAIL_USERNAME=os.getenv("MAIL_USERNAME"),
-    MAIL_PASSWORD=os.getenv("MAIL_APP_PASSWORD"),
+    MAIL_USERNAME=os.getenv("MAIL_USERNAME").replace(u'\xa0', u' '),
+    MAIL_PASSWORD=os.getenv("MAIL_APP_PASSWORD").replace(u'\xa0', u' '),
+    MAIL_DEFAULT_SENDER="test.hesap458@gmail.com",
+    MAIL_MAX_EMAILS=None,
+    MAIL_SUPPRESS_SEND=False,
+    MAIL_USE_SSL=False,
+    MAIL_DEFAULT_CHARSET='utf-8'
 )
 
 mail = Mail(app)
@@ -174,51 +179,70 @@ def survey():
 
 @app.route("/survey/send", methods=["POST"])
 def send_survey():
+    print("[DEBUG] Received survey submission request")
     data = request.get_json(force=True)
-    print(data)
+    print("[DEBUG] Received data:", data)
+
+    # Clean any non-breaking spaces from the data
+    cleaned_data = {}
+    for key, value in data.items():
+        if isinstance(value, str):
+            cleaned_data[key] = value.replace(u'\xa0', u' ')
+        else:
+            cleaned_data[key] = value
 
     # Extract models tried and cons
-    models_tried = data.get("models", [])
+    models_tried = cleaned_data.get("models", [])
     model_cons = {}
+    print("[DEBUG] Models tried:", models_tried)
 
     # Loop over the keys and their corresponding cons
-    for key, value in data.items():
+    for key, value in cleaned_data.items():
         if key.endswith("_cons"):
             model = key.rsplit("_cons", 1)[0].capitalize()  # Get the model name and capitalize it
-            if value.strip():
+            if value and isinstance(value, str) and value.strip():
                 model_cons[model] = value.strip()
+    print("[DEBUG] Model cons:", model_cons)
 
-    cons_section = "\n".join([f"{model}: {reason}" for model, reason in model_cons.items()]) or "None provided"
-    models_line = f"Models Tried: {', '.join(models_tried) if models_tried else 'None'}"
-    
     # Build the email body with all relevant information
-    body = "\n".join([
-        f"Name: {data.get('name', '')}",
-        f"Birth Date: {data.get('birth_date', '')}",
-        f"Education Level: {data.get('education_level', '')}",
-        f"City: {data.get('city', '')}",
-        f"Gender: {data.get('gender', '')}",
-        models_line,
-        "Defects/Cons Per Model:",
-        cons_section,
-        f"Use Case: {data.get('use_case', '')}",
-    ])
+    body_parts = [
+        f"Name: {cleaned_data.get('name', '')}",
+        f"Birth Date: {cleaned_data.get('birth_date', '')}",
+        f"Education Level: {cleaned_data.get('education_level', '')}",
+        f"City: {cleaned_data.get('city', '')}",
+        f"Gender: {cleaned_data.get('gender', '')}",
+        f"Models Tried: {', '.join(models_tried) if models_tried else 'None'}"
+    ]
 
-    # Create the email message
-    msg = Message(
-        subject="AI Survey Result",
-        sender="test.hesap458@gmail.com",
-        recipients=["test.hesap458@gmail.com"],
-        body=body,
-    )
+    if model_cons:
+        body_parts.append("Defects/Cons Per Model:")
+        body_parts.extend([f"{model}: {reason}" for model, reason in model_cons.items()])
+    else:
+        body_parts.append("Defects/Cons Per Model: None provided")
+
+    body_parts.append(f"Use Case: {cleaned_data.get('use_case', '')}")
+    
+    body = "\n".join(body_parts)
+    print("[DEBUG] Email body:", body)
 
     try:
-        mail.send(msg)
-        flash("Survey sent successfully!", "success")
+        print("[DEBUG] Attempting to send email...")
+        with mail.connect() as conn:
+            msg = Message(
+                subject="AI Survey Result",
+                recipients=["test.hesap458@gmail.com"],
+                body=body,
+                charset='utf-8'
+            )
+            conn.send(msg)
+        print("[DEBUG] Email sent successfully")
         return jsonify(success=True, message="Mail sent"), 200
     except SMTPException as exc:
-        flash(f"Error: {exc}", "error")
+        print("[ERROR] SMTP Exception:", str(exc))
         return jsonify(success=False, message=f"Mail error: {exc}"), 500
+    except Exception as e:
+        print("[ERROR] Unexpected error:", str(e))
+        return jsonify(success=False, message=f"Unexpected error: {e}"), 500
 
 # In-memory store for survey templates
 SURVEY_TEMPLATES = {}

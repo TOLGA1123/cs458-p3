@@ -46,12 +46,13 @@ export default function HomePage() {
           {/* Buttons Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
             <Button
+              id="aiSurveyBtn"
               variant="default"
               size="lg"
               className="h-24 flex flex-col items-center justify-center gap-2 bg-purple-600 hover:bg-purple-700"
               asChild
             >
-              <Link href="/ai-survey">
+              <Link href="/AI_survey">
                 <FileText className="h-6 w-6" />
                 <span>AI Survey</span>
               </Link>
