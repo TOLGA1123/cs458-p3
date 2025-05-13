@@ -26,6 +26,10 @@ class CreateSurveyTest(unittest.TestCase):
             EC.presence_of_element_located((by, value))
         )
 
+    def clear_and_type(self, element: WebElement, text: str):
+        element.clear()
+        element.send_keys(text)
+    
     def test_create_survey_with_options_and_local_storage(self):
         driver = self.driver
 
@@ -43,8 +47,8 @@ class CreateSurveyTest(unittest.TestCase):
         q1 = self.find_element(By.XPATH,
             "//div[@class='space-y-4']/div[1][contains(@class,'relative')]"
         )
-        q1.find_element(By.XPATH, ".//input[contains(@id,'-title')]")\
-          .send_keys("What is your favorite color?")
+        inp = q1.find_element(By.XPATH, ".//input[contains(@id,'-title')]")
+        self.clear_and_type(inp, "What is your favorite color?")
         # fill defaults
         mc_defaults = ["Red", "Green", "Blue"]
         opts = q1.find_elements(By.XPATH, ".//input[contains(@placeholder,'Option')]")
@@ -63,24 +67,25 @@ class CreateSurveyTest(unittest.TestCase):
         q2 = self.find_element(By.XPATH,
             "//div[@class='space-y-4']/div[2][contains(@class,'relative')]"
         )
-        q2.find_element(By.XPATH, ".//input[contains(@id,'-title')]")\
-           .send_keys("Rate your satisfaction")
+        inp = q2.find_element(By.XPATH, ".//input[contains(@id,'-title')]")
+        self.clear_and_type(inp, "Rate your satisfaction")
 
         # 4) Add & fill Q3: Text
         driver.find_element(By.ID, "add-text").click()
         q3 = self.find_element(By.XPATH,
             "//div[@class='space-y-4']/div[3][contains(@class,'relative')]"
         )
-        q3.find_element(By.XPATH, ".//input[contains(@id,'-title')]")\
-           .send_keys("What is your name?")
+        
+        inp = q3.find_element(By.XPATH, ".//input[contains(@id,'-title')]")
+        self.clear_and_type(inp, "What is your name?")
 
         # 5) Add & fill Q4: Dropdown
         driver.find_element(By.ID, "add-dropdown").click()
         q4 = self.find_element(By.XPATH,
             "//div[@class='space-y-4']/div[4][contains(@class,'relative')]"
         )
-        q4.find_element(By.XPATH, ".//input[contains(@id,'-title')]")\
-           .send_keys("Select your country")
+        inp = q4.find_element(By.XPATH, ".//input[contains(@id,'-title')]")
+        self.clear_and_type(inp, "Select your country")
         dd_defaults = ["USA", "Canada", "UK"]
         dd_opts = q4.find_elements(By.XPATH, ".//input[contains(@placeholder,'Option')]")
         for inp, text in zip(dd_opts, dd_defaults):
@@ -97,8 +102,10 @@ class CreateSurveyTest(unittest.TestCase):
         q5 = self.find_element(By.XPATH,
             "//div[@class='space-y-4']/div[5][contains(@class,'relative')]"
         )
-        q5.find_element(By.XPATH, ".//input[contains(@id,'-title')]")\
-           .send_keys("Select your interests")
+        
+        inp = q5.find_element(By.XPATH, ".//input[contains(@id,'-title')]")
+        self.clear_and_type(inp, "Select your interests")
+        
         cb_defaults = ["Sports", "Music", "Travel"]
         cb_opts = q5.find_elements(By.XPATH, ".//input[contains(@placeholder,'Option')]")
         for inp, text in zip(cb_opts, cb_defaults):
