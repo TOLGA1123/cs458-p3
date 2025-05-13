@@ -81,32 +81,33 @@ document.getElementById("survey_form")
   .addEventListener("change", evaluateConditions);
 
 function evaluateConditions() {
-  document.querySelectorAll(".question-block").forEach(block => {
-    const logicQ   = block.querySelector(".logic-question").value;
-    const logicVal = block.querySelector(".logic-value").value.trim();
+  const questions = document.querySelectorAll(".question-block");
 
-    if (logicQ !== "" && logicVal !== "") {
-      const parentBlock = document.querySelectorAll(".question-block")[logicQ];
-      const triggerEls  = parentBlock.querySelectorAll("input, select, textarea");
+  questions.forEach(block => {
+    const condIndex = block.dataset.showIfQuestion;
+    const condValue = block.dataset.showIfValue;
+
+    if (condIndex !== undefined && condValue !== undefined) {
+      const parent = questions[condIndex];
+      const inputEls = parent.querySelectorAll("input, select, textarea");
+      const type = inputEls[0]?.type;
+
       let currentValue = "";
 
-      if (triggerEls[0].type === "radio") {
-        const sel = Array.from(triggerEls).find(i => i.checked);
+      if (type === "radio") {
+        const sel = Array.from(inputEls).find(i => i.checked);
         currentValue = sel ? sel.value : "";
-      }
-      else if (triggerEls[0].type === "checkbox") {
-        currentValue = Array.from(triggerEls)
-                            .filter(i => i.checked)
-                            .map(i => i.value)
-                            .join(",");
-      }
-      else {
-        currentValue = triggerEls[0].value;
+      } else if (type === "checkbox") {
+        currentValue = Array.from(inputEls).filter(i => i.checked).map(i => i.value).join(",");
+      } else {
+        currentValue = inputEls[0]?.value || "";
       }
 
-      block.style.display = (currentValue === logicVal) ? "" : "none";
-    } else {
-      block.style.display = "";
+      if (currentValue === condValue) {
+        block.classList.remove("hidden");
+      } else {
+        block.classList.add("hidden");
+      }
     }
   });
 }
