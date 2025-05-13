@@ -44,7 +44,7 @@ export default function HomePage() {
               className="h-24 flex flex-col items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700"
               asChild
             >
-              <Link href="/created-surveys">
+              <Link href="/saved-surveys">
                 <ClipboardList className="h-6 w-6" />
                 <span>Created Surveys</span>
               </Link>
