@@ -40,7 +40,10 @@ class LoginTest(unittest.TestCase):
         password_input.clear()
         password_input.send_keys("password123")
         login_button.click()
-        WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.ID, "errorMessage")))
+        # Wait for the error message to appear
+        WebDriverWait(driver, 30).until(
+            EC.presence_of_element_located((By.ID, "errorMessage"))
+        )
         error_message = driver.find_element(By.ID, "errorMessage").text
         self.assertEqual(error_message, "Email/Phone field is required.", "Error message for blank email/phone is incorrect.")
         self.assertEqual(driver.current_url, "http://127.0.0.1:3000/")     #should still be in login

@@ -15,7 +15,6 @@ export default function HomePage() {
         method: 'GET',
         credentials: 'include',
       })
-      
       if (response.ok) {
         router.push('/')
       }

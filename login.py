@@ -125,7 +125,7 @@ def login_page():
         session['failed_attempts'] = 0  # Reset failed attempts on successful login
         session['lockout_time'] = None  # Reset lockout time
         print(f"[DEBUG] Session after success: failed_attempts={session['failed_attempts']}, lockout_time={session['lockout_time']}")
-        return jsonify(success=True, redirect="/")
+        return jsonify(success=True, redirect="/Home")
 
     # If there's an error, increment failed attempts counter
     session['failed_attempts'] += 1
@@ -154,7 +154,7 @@ def google_callback():
     session['google_user'] = user_info
     print(f"[DEBUG] Google login successful for user: {user_info}")
     # Redirect to the frontend's /home page
-    return redirect("http://127.0.0.1:3000/home")
+    return redirect("http://127.0.0.1:3000/Home")
 
 @app.route('/logout')
 def logout():

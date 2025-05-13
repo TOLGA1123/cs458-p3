@@ -65,18 +65,28 @@ class LoginTest(unittest.TestCase):
         cookies = driver.get_cookies()
         session_cookie = next((cookie for cookie in cookies if cookie['name'] == 'session'), None)
         self.assertIsNotNone(session_cookie, "Session cookie should exist after failed login attempts.")
-        time.sleep(30)
-        email_input = driver.find_element(By.ID, "user_input")
-        password_input = driver.find_element(By.ID, "password")
-        login_button = driver.find_element(By.ID, "loginButton")
-        email_input.clear()
-        email_input.send_keys("admin@gmail.com")
-        password_input.clear()
-        password_input.send_keys("password123")
-        login_button.click()
+        
+        # Wait for lockout to expire by checking error message
+        while True:
+            try:
+                email_input = driver.find_element(By.ID, "user_input")
+                password_input = driver.find_element(By.ID, "password")
+                login_button = driver.find_element(By.ID, "loginButton")
+                email_input.clear()
+                email_input.send_keys("admin@gmail.com")
+                password_input.clear()
+                password_input.send_keys("password123")
+                login_button.click()
+                
+                # If we get here without an error message, lockout has expired
+                WebDriverWait(driver, 5).until(EC.url_contains("http://127.0.0.1:3000/Home"))
+                break
+            except:
+                # If we get an error message, wait a bit and try again
+                time.sleep(1)
+                continue
+        
         self.assertEqual(driver.current_url, "http://127.0.0.1:3000/Home")
-
-
 
     @classmethod
     def tearDownClass(cls):

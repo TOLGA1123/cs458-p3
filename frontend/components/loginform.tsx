@@ -15,6 +15,7 @@ export function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError("") // Clear any previous errors
     try {
       const formData = new FormData()
       formData.append('user_input', email)
@@ -31,18 +32,25 @@ export function LoginForm() {
         data = await response.json()
       } catch (jsonErr) {
         console.error('Failed to parse JSON:', jsonErr)
-        setError('Invalid server response')
+        setError('Server returned an invalid response. Please try again.')
         return
       }
+
       console.log('Login response:', data)
       if (data.success) {
-        window.location.href = '/Home'
+        window.location.href = data.redirect
+      } else if (data.error) {
+        setError(data.error)
       } else {
-        setError(data.error || 'Login failed')
+        setError('Login failed. Please try again.')
       }
     } catch (err) {
       console.error('Login error:', err)
-      setError('An error occurred during login')
+      if (err instanceof TypeError && err.message.includes('Failed to fetch')) {
+        setError('Unable to connect to the server. Please check your internet connection.')
+      } else {
+        setError('An unexpected error occurred. Please try again.')
+      }
     }
   }
 
@@ -65,7 +73,6 @@ export function LoginForm() {
               placeholder="Enter your email or phone number"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required
             />
           </div>
           <div className="space-y-2">
@@ -76,7 +83,6 @@ export function LoginForm() {
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required
             />
           </div>
           <Button id="loginButton" type="submit" className="w-full">
