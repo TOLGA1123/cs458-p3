@@ -154,7 +154,7 @@ def google_callback():
     session['google_user'] = user_info
     print(f"[DEBUG] Google login successful for user: {user_info}")
     # Redirect to the frontend's /home page
-    return redirect("http://127.0.0.1:3000/Home")
+    return redirect("http://127.0.0.1:3000/home")
 
 @app.route('/logout')
 def logout():
