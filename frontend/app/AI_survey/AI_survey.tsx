@@ -63,6 +63,8 @@ const formSchema = z.object({
 export default function AISurveyForm() {
   const [isSubmitting, setIsSubmitting] = React.useState(false)
   const [flashMessage, setFlashMessage] = React.useState<{ message: string; type: "success" | "error" } | null>(null)
+  const [lastSubmission, setLastSubmission] = React.useState<string | null>(null)
+  const [isChangedSinceLastSubmit, setIsChangedSinceLastSubmit] = React.useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -79,13 +81,25 @@ export default function AISurveyForm() {
 
   const watchedModels = form.watch("models")
 
+  React.useEffect(() => {
+    const last = localStorage.getItem("lastSurveySubmission")
+    setLastSubmission(last)
+  }, [])
+
+  React.useEffect(() => {
+    const subscription = form.watch((values) => {
+      const current = JSON.stringify(values)
+      setIsChangedSinceLastSubmit(current !== lastSubmission)
+    })
+    return () => subscription.unsubscribe()
+  }, [form, lastSubmission])
+
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsSubmitting(true)
     console.log("Form submission started with values:", values)
 
     // Check for duplicate submission
     const newSubmission = JSON.stringify(values)
-    const lastSubmission = localStorage.getItem("lastSurveySubmission")
     console.log("Checking for duplicate submission:", { newSubmission, lastSubmission })
 
     if (newSubmission === lastSubmission) {
@@ -364,7 +378,7 @@ export default function AISurveyForm() {
               )}
             />
 
-            <Button id="send-btn" type="submit" className="w-full" disabled={isSubmitting || !form.formState.isValid}>
+            <Button id="send-btn" type="submit" className="w-full" disabled={isSubmitting || !form.formState.isValid || !isChangedSinceLastSubmit}>
               {isSubmitting ? "Sending..." : "Send"}
             </Button>
           </form>

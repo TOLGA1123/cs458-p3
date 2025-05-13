@@ -56,17 +56,13 @@ class SendDifferentWebForm(unittest.TestCase):
         send_button = driver.find_element(By.ID, "send-btn")
         self.assertTrue(send_button.is_enabled())
         send_button.click()
+        print("Send button clicked 1 times")
 
-        # Attempt to send same form again
-        for i in range(3):
-            send_button.click()
-            print(f"Send button clicked {i+1} times")
-            time.sleep(1)
-
+        # Wait for the error message to appear after submit
         error_element = WebDriverWait(driver, 10).until(
-            EC.visibility_of_element_located((By.ID, "multiple_send_error"))
+            EC.visibility_of_element_located((By.XPATH, "//*[contains(text(), 'You can only submit same form contents once.')]"))
         )
-        self.assertIn("You can only submit same form contents once.", error_element.text.replace(u'\xa0', u' '))
+        self.assertIn("You can only submit same form contents once.", error_element.text)
 
         # Modify form and submit again (Test2)
         name_input = driver.find_element(By.ID, "name")
@@ -93,7 +89,18 @@ class SendDifferentWebForm(unittest.TestCase):
         driver.find_element(By.ID, "birth_date").clear()
         driver.find_element(By.ID, "birth_date").send_keys("05-01-2015")
 
-        Select(driver.find_element(By.ID, "education_level")).select_by_visible_text("Bachelor's")
+        # Handle custom select component robustly (like survey_test4)
+        education_select = driver.find_element(By.ID, "education_level")
+        education_select.click()
+        time.sleep(0.5)  # Give time for the dropdown to render
+        option = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//div[@role='option' and .=\"Bachelor's Degree\"]"))
+        )
+        option.click()
+        WebDriverWait(driver, 10).until(
+            EC.invisibility_of_element_located((By.XPATH, "//div[@role='option' and .=\"Bachelor's Degree\"]"))
+        )
+
         driver.find_element(By.ID, "city").clear()
         driver.find_element(By.ID, "city").send_keys("Ankara")
 

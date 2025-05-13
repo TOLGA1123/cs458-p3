@@ -57,7 +57,18 @@ class WebSurveyDuplicateSendTest(unittest.TestCase):
         driver.find_element(By.ID, "name").send_keys("Jane Doe")
         driver.find_element(By.ID, "birth_date").send_keys("05-01-2015")
 
-        Select(driver.find_element(By.ID, "education_level")).select_by_visible_text("Bachelor's")
+        # Handle custom select component robustly (like survey_test1)
+        education_select = driver.find_element(By.ID, "education_level")
+        education_select.click()
+        time.sleep(0.5)  # Give time for the dropdown to render
+        option = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.XPATH, "//div[@role='option' and .=\"Bachelor's Degree\"]"))
+        )
+        option.click()
+        WebDriverWait(driver, 10).until(
+            EC.invisibility_of_element_located((By.XPATH, "//div[@role='option' and .=\"Bachelor's Degree\"]"))
+        )
+
         driver.find_element(By.ID, "city").send_keys("Ankara")
 
         # Click the label for 'Female' to select the gender
@@ -79,23 +90,17 @@ class WebSurveyDuplicateSendTest(unittest.TestCase):
                 cons_input.clear()
                 cons_input.send_keys("None")
 
-
         driver.find_element(By.ID, "use_case").send_keys("Helps me summarize articles.")
 
         send_btn = driver.find_element(By.ID, "send-btn")
         self.assertTrue(send_btn.is_enabled())
 
         # --- MULTIPLE SEND CLICKS ---
-        for i in range(3):
-            send_btn.click()
-            print(f"Send clicked {i + 1} times")
-            time.sleep(1)  # brief pause
-
-        # --- EXPECT ERROR MESSAGE ---
-        multiple_send_error = WebDriverWait(driver, 10).until(
-            EC.visibility_of_element_located((By.ID, "multiple_send_error"))
-        )
-        self.assertIn("You can only submit same form contents once.", multiple_send_error.text.replace(u'\xa0', u' '))
+        send_btn.click()
+        print("Send clicked 1 times")
+        # Wait for the button to become disabled
+        WebDriverWait(driver, 5).until(lambda d: not send_btn.is_enabled())
+        self.assertFalse(send_btn.is_enabled(), "Send button should be disabled after submitting the same form contents.")
 
          # --- EMAIL VERIFICATION VIA IMAP ---
         email_found = self.wait_for_email(
