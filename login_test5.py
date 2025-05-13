@@ -81,7 +81,7 @@ class LoginTest(unittest.TestCase):
         password_input.clear()
         password_input.send_keys("password123")
         login_button.click()
-        self.assertEqual(driver.current_url, "http://127.0.0.1:3000/home")      #should redirect to home
+        self.assertEqual(driver.current_url, "http://127.0.0.1:3000/Home")      #should redirect to home
 
     def test_invalid_email_and_phone_format(self):
         driver = self.driver

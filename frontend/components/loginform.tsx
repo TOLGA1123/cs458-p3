@@ -36,7 +36,7 @@ export function LoginForm() {
       }
       console.log('Login response:', data)
       if (data.success) {
-        window.location.href = '/home'
+        window.location.href = '/Home'
       } else {
         setError(data.error || 'Login failed')
       }

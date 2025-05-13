@@ -47,8 +47,8 @@ class LoginTest(unittest.TestCase):
         
         password_next_button = WebDriverWait(driver, 20).until(EC.element_to_be_clickable((By.ID, "passwordNext")))
         driver.execute_script("arguments[0].click();", password_next_button)
-        WebDriverWait(driver, 30).until(EC.url_to_be("http://127.0.0.1:3000/home"))
-        self.assertEqual(driver.current_url, "http://127.0.0.1:3000/home")
+        WebDriverWait(driver, 30).until(EC.url_to_be("http://127.0.0.1:3000/Home"))
+        self.assertEqual(driver.current_url, "http://127.0.0.1:3000/Home")
         cookies = driver.get_cookies()
         session_cookie = next((cookie for cookie in cookies if cookie['name'] == 'session'), None)
         self.assertIsNotNone(session_cookie, "Session cookie should exist after login.")

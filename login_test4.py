@@ -74,7 +74,7 @@ class LoginTest(unittest.TestCase):
         password_input.clear()
         password_input.send_keys("password123")
         login_button.click()
-        self.assertEqual(driver.current_url, "http://127.0.0.1:3000/home")
+        self.assertEqual(driver.current_url, "http://127.0.0.1:3000/Home")
 
 
 
