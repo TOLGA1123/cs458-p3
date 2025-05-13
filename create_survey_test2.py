@@ -166,8 +166,8 @@ class CreateSurveyTest(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        #time.sleep(1)
-        #cls.driver.quit()
+        time.sleep(1)
+        cls.driver.quit()
         pass
 
 

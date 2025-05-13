@@ -123,6 +123,24 @@ class SurveyCreationTest(unittest.TestCase):
         desc.clear()  # Clear any pre-existing text
         desc.send_keys("A test survey with various question types and options.")
 
+        driver.find_element(By.ID, "add-checkbox").click()
+        q5 = self.find_element(By.XPATH,
+            "//div[@class='space-y-4']/div[1][contains(@class,'relative')]"
+        )
+        q5_title = q5.find_element(By.XPATH, ".//input[contains(@id,'-title')]")
+        q5_title.clear()  # Clear any pre-existing text
+        q5_title.send_keys("Select your interests")
+        cb_defaults = ["Sports", "Music", "Travel"]
+        cb_opts = q5.find_elements(By.XPATH, ".//input[contains(@placeholder,'Option')]")
+        for inp, text in zip(cb_opts, cb_defaults):
+            inp.clear()  # Clear any pre-existing option text
+            inp.send_keys(text)
+        q5.find_element(By.XPATH, ".//button[contains(., 'Add Option')]").click()
+        time.sleep(0.5)
+        cb_opts = q5.find_elements(By.XPATH, ".//input[contains(@placeholder,'Option')]")
+        cb_opts[-1].clear()  # Clear the last option before adding new text
+        cb_opts[-1].send_keys("Art")
+
         # 7) Save the survey
         driver.find_element(By.ID, "save-button").click()  # Assuming there's a save button
         time.sleep(1)
