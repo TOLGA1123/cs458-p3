@@ -57,7 +57,7 @@ type Question = MultipleChoiceQuestion | RatingQuestion | TextQuestion | Dropdow
 
 export default function CreateSurveyPage() {
   const MAX_QUESTIONS = 100;
-  const [surveyTitle, setSurveyTitle] = useState("Untitled Survey")
+  const [surveyTitle, setSurveyTitle] = useState("")
   const [surveyDescription, setSurveyDescription] = useState("")
   const [questions, setQuestions] = useState<Question[]>([])
   const [activeTab, setActiveTab] = useState("edit")
@@ -371,10 +371,28 @@ export default function CreateSurveyPage() {
 
   const saveSurvey = () => {
 
+
     if (questions.length > MAX_QUESTIONS) {
     alert("too many questions in the survey, limit of 100 questions reached");
     return;                       // 👈 abort save-flow
+    }
+    
+      if (!surveyTitle.trim()) {
+    alert("Please enter a survey title before saving.")
+    return
     } 
+
+    /* 2️⃣ no description */
+    if (!surveyDescription.trim()) {
+      alert("Please enter a survey description before saving.")
+      return
+    }
+
+    /* 3️⃣ no questions */
+    if (questions.length === 0) {
+      alert("A survey must contain at least one question before it can be saved.")
+      return
+    }
 
     const survey = {
       id: editingSurveyId || generateId(),
