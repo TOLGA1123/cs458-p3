@@ -1,89 +1,175 @@
+import unittest
 import time
-import pytest
+import json
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.remote.webelement import WebElement
 
-BASE_URL = "http://localhost:3000"
 
-@pytest.fixture
-def driver():
-    # you can swap Chrome() for Firefox(), etc.
-    driver = webdriver.Chrome()
-    driver.maximize_window()
-    yield driver
-    driver.quit()
+class CreateSurveyTest(unittest.TestCase):
+    driver: webdriver.Chrome
 
-def test_conditional_question_shows_in_preview(driver):
-    wait = WebDriverWait(driver, 10)
-    driver.get(f"{BASE_URL}/create-survey")
+    @classmethod
+    def setUpClass(cls):
+        # tell Chrome not to close when the test finishes
+        opts = webdriver.ChromeOptions()
+        opts.add_experimental_option("detach", True)
+        cls.driver = webdriver.Chrome(options=opts)
 
-    # 1) Add Q1: Multiple Choice
-    btn_mc = wait.until(EC.element_to_be_clickable(
-        (By.XPATH, "//button[contains(., 'Multiple Choice')]")
-    ))
-    btn_mc.click()
+        cls.driver.get("http://localhost:3000/create-survey")
+        cls.driver.maximize_window()
 
-    # 2) Fill Q1 title
-    #    We look for the first text input under the question-list container.
-    q1_input = wait.until(EC.visibility_of_element_located(
-        (By.CSS_SELECTOR, 'input[placeholder="Enter question text"]')
-    ))
-    q1_input.clear()
-    q1_input.send_keys("Do you like cats?")
+    def find_element(self, by: By, value: str) -> WebElement:
+        return WebDriverWait(self.driver, 10).until(
+            EC.presence_of_element_located((by, value))
+        )
+    def clear_and_type(self, element: WebElement, text: str):
+        element.clear()
+        element.send_keys(text)
+    def test_create_survey_with_options_and_local_storage(self):
+        driver = self.driver
 
-    # 3) Add Q2: Multiple Choice
-    btn_mc.click()
+        # 1) Fill title & description
+        title = self.find_element(By.ID, "survey-title")
+        title.clear()
+        title.send_keys("My Test Survey")
 
-    # 4) Fill Q2 title (the second such input)
-    all_q_inputs = driver.find_elements(By.CSS_SELECTOR, 'input[placeholder="Enter question text"]')
-    assert len(all_q_inputs) >= 2, "Two question inputs expected"
-    q2_input = all_q_inputs[1]
-    q2_input.clear()
-    q2_input.send_keys("Why cats?")
+        desc = self.find_element(By.ID, "survey-description")
+        desc.clear()
+        desc.send_keys("A test survey with various question types and options.")
 
-    # 5) Enable conditional logic on Q2
-    #    The shadcn Switch renders as a button[role="switch"]
-    switches = driver.find_elements(By.CSS_SELECTOR, 'button[role="switch"]')
-    assert len(switches) >= 2, "At least two switches (one per question)"
-    switches[1].click()
+        # 2) Add & fill Q1: Multiple Choice
+        driver.find_element(By.ID, "add-multiple-choice").click()
+        q1 = self.find_element(By.XPATH,
+            "//div[@class='space-y-4']/div[1][contains(@class,'relative')]"
+        )
 
-    # 6) Pick Parent Question = "Do you like cats?"
-    #    Open the parent-select
-    parent_triggers = driver.find_elements(By.CSS_SELECTOR, 'button[id$="-parent"]')
-    assert len(parent_triggers) >= 2
-    parent_triggers[1].click()
-    #    Choose that option from the dropdown list
-    wait.until(EC.element_to_be_clickable(
-        (By.XPATH, "//li[contains(., 'Do you like cats?')]")
-    )).click()
+        inp = q1.find_element(By.XPATH, ".//input[contains(@id,'-title')]")
+        self.clear_and_type(inp, "What is your favorite color?")
+        # fill defaults
+        mc_defaults = ["Red", "Green", "Blue"]
+        opts = q1.find_elements(By.XPATH, ".//input[contains(@placeholder,'Option')]")
+        for inp, text in zip(opts, mc_defaults):
+            inp.clear()
+            inp.send_keys(text)
+        # add a fourth
+        q1.find_element(By.XPATH, ".//button[contains(., 'Add Option')]").click()
+        time.sleep(0.5)
+        opts = q1.find_elements(By.XPATH, ".//input[contains(@placeholder,'Option')]")
+        opts[-1].clear()
+        opts[-1].send_keys("Purple")
 
-    # 7) Pick Parent Answer = "Option 1"
-    answer_triggers = driver.find_elements(By.CSS_SELECTOR, 'button[id$="-answer"]')
-    assert len(answer_triggers) >= 2
-    answer_triggers[1].click()
-    wait.until(EC.element_to_be_clickable(
-        (By.XPATH, "//li[contains(., 'Option 1')]")
-    )).click()
+        # 3) Add & fill Q2: Rating
+        driver.find_element(By.ID, "add-rating").click()
+        q2 = self.find_element(By.XPATH,
+            "//div[@class='space-y-4']/div[2][contains(@class,'relative')]"
+        )
+        q2.find_element(By.XPATH, ".//input[contains(@id,'-title')]")\
+           .send_keys("Rate your satisfaction")
 
-    # 8) Switch to Preview tab
-    wait.until(EC.element_to_be_clickable(
-        (By.XPATH, "//button[contains(.,'Preview Survey')]")
-    )).click()
+        # 1. locate the switch & label
+        switch_btn = q2.find_element(By.XPATH, ".//button[contains(@id,'-conditional')]")
+        switch_id  = switch_btn.get_attribute("id")
+        label_for  = q2.find_element(By.XPATH, f".//label[@for='{switch_id}']")
 
-    # 9) Select "Option 1" under Q1 in preview
-    #    The preview radio has name="preview-<question.id>" and value="Option 1"
-    opt1_radio = wait.until(EC.element_to_be_clickable(
-        (By.CSS_SELECTOR, 'input[type="radio"][value="Option 1"]')
-    ))
-    opt1_radio.click()
+        # 2. scroll into view
+        driver.execute_script("arguments[0].scrollIntoView({block:'center'});", switch_btn)
 
-    # 10) Assert that Q2 ("Why cats?") is now visible
-    q2_heading = wait.until(EC.visibility_of_element_located(
-        (By.XPATH, "//h3[contains(text(), 'Why cats?')]")
-    ))
-    assert q2_heading.is_displayed(), "Conditional question did not appear in preview"
+        # 3. click the button; if still off, click the label
+        switch_btn.click()
+        time.sleep(0.2)
+        if switch_btn.get_attribute("aria-checked") != "true":
+            label_for.click()
 
-    # Give a moment to see the result if running interactively
-    time.sleep(1)
+        # wait until it is actually toggled
+        WebDriverWait(driver, 5).until(
+            lambda drv: switch_btn.get_attribute("aria-checked") == "true"
+        )
+
+        # 4. open the “Previous Question” Select and pick Q1
+        parent_trigger = q2.find_element(By.CSS_SELECTOR, "button[id$='-parent']")
+        parent_trigger.click()
+        WebDriverWait(driver, 5).until(EC.element_to_be_clickable((
+            By.XPATH,
+            "//div[@role='option' and normalize-space(.)='What is your favorite color?']"
+        ))).click()
+
+        # 5. open the “Answer is” Select and pick “Red”
+        answer_trigger = q2.find_element(By.CSS_SELECTOR, "button[id$='-answer']")
+        answer_trigger.click()
+        WebDriverWait(driver, 5).until(EC.element_to_be_clickable((
+            By.XPATH,
+            "//div[@role='option' and normalize-space(.)='Red']"
+        ))).click()
+
+        # 4) Add & fill Q3: Text
+        driver.find_element(By.ID, "add-text").click()
+        q3 = self.find_element(By.XPATH,
+            "//div[@class='space-y-4']/div[3][contains(@class,'relative')]"
+        )
+        q3.find_element(By.XPATH, ".//input[contains(@id,'-title')]")\
+           .send_keys("What is your name?")
+
+        # 5) Add & fill Q4: Dropdown
+        driver.find_element(By.ID, "add-dropdown").click()
+        q4 = self.find_element(By.XPATH,
+            "//div[@class='space-y-4']/div[4][contains(@class,'relative')]"
+        )
+        q4.find_element(By.XPATH, ".//input[contains(@id,'-title')]")\
+           .send_keys("Select your country")
+        dd_defaults = ["USA", "Canada", "UK"]
+        dd_opts = q4.find_elements(By.XPATH, ".//input[contains(@placeholder,'Option')]")
+        for inp, text in zip(dd_opts, dd_defaults):
+            inp.clear()
+            inp.send_keys(text)
+        q4.find_element(By.XPATH, ".//button[contains(., 'Add Option')]").click()
+        time.sleep(0.5)
+        dd_opts = q4.find_elements(By.XPATH, ".//input[contains(@placeholder,'Option')]")
+        dd_opts[-1].clear()
+        dd_opts[-1].send_keys("Other")
+
+        # 6) Add & fill Q5: Checkbox
+        driver.find_element(By.ID, "add-checkbox").click()
+        q5 = self.find_element(By.XPATH,
+            "//div[@class='space-y-4']/div[5][contains(@class,'relative')]"
+        )
+        q5.find_element(By.XPATH, ".//input[contains(@id,'-title')]")\
+           .send_keys("Select your interests")
+        cb_defaults = ["Sports", "Music", "Travel"]
+        cb_opts = q5.find_elements(By.XPATH, ".//input[contains(@placeholder,'Option')]")
+        for inp, text in zip(cb_opts, cb_defaults):
+            inp.clear()
+            inp.send_keys(text)
+        q5.find_element(By.XPATH, ".//button[contains(., 'Add Option')]").click()
+        time.sleep(0.5)
+        cb_opts = q5.find_elements(By.XPATH, ".//input[contains(@placeholder,'Option')]")
+        cb_opts[-1].clear()
+        cb_opts[-1].send_keys("Art")
+
+        # 7) Save and accept the alert
+        self.find_element(By.ID, "save-button").click()
+        WebDriverWait(driver, 5).until(EC.alert_is_present())
+        alert = driver.switch_to.alert
+        alert.accept()
+
+        # 8) Wait for the app to navigate to /saved-surveys
+        WebDriverWait(driver, 10).until(EC.url_contains("/saved-surveys"))
+
+        # 9) Verify localStorage was updated
+        stored = driver.execute_script("return window.localStorage.getItem('savedSurveys');")
+        self.assertIsNotNone(stored, "No savedSurveys key in localStorage")
+        surveys = json.loads(stored)
+        self.assertTrue(any(s["title"] == "My Test Survey" for s in surveys),
+                        "Saved survey not found in localStorage list")
+
+    @classmethod
+    def tearDownClass(cls):
+        #time.sleep(1)
+        #cls.driver.quit()
+        pass
+
+
+if __name__ == "__main__":
+    unittest.main()
