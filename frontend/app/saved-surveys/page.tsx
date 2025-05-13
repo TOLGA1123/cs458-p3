@@ -59,7 +59,7 @@ export default function SavedSurveysPage() {
     <div className="container mx-auto py-8 max-w-4xl">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold">Saved Surveys</h1>
-        <Button onClick={() => router.push("/create-survey")}>Create New Survey</Button>
+        <Button onClick={() => router.push("/create-survey")} id="create-new-survey">Create New Survey</Button>
       </div>
 
       {savedSurveys.length === 0 ? (

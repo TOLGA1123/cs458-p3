@@ -735,23 +735,23 @@ export default function CreateSurveyPage() {
 
           {/* Add Question Button */}
           <div className="flex flex-row flex-wrap gap-2 justify-center">
-            <Button onClick={() => addQuestion("multiple-choice")} >
+            <Button onClick={() => addQuestion("multiple-choice")} id="add-multiple-choice" >
               <PlusCircle className="h-4 w-4 mr-2" />
               Multiple Choice
             </Button>
-            <Button onClick={() => addQuestion("rating")}>
+            <Button onClick={() => addQuestion("rating")}  id="add-rating">
               <PlusCircle className="h-4 w-4 mr-2" />
               Rating Scale
             </Button>
-            <Button onClick={() => addQuestion("text")} >
+            <Button onClick={() => addQuestion("text")}  id="add-text" >
               <PlusCircle className="h-4 w-4 mr-2" />
               Text Field
             </Button>
-            <Button onClick={() => addQuestion("dropdown")} >
+            <Button onClick={() => addQuestion("dropdown")} id="add-dropdown" >
               <PlusCircle className="h-4 w-4 mr-2" />
               Dropdown
             </Button>
-            <Button onClick={() => addQuestion("checkbox")} >
+            <Button onClick={() => addQuestion("checkbox")} id="add-checkbox" >
               <PlusCircle className="h-4 w-4 mr-2" />
               Checkbox
             </Button>
@@ -759,7 +759,7 @@ export default function CreateSurveyPage() {
 
           {/* Save Button */}
           <div className="flex justify-end">
-            <Button onClick={saveSurvey} size="lg" className="gap-2">
+            <Button onClick={saveSurvey} size="lg" className="gap-2" id="save-button">
               <Save className="h-4 w-4" />
               Save Survey
             </Button>
